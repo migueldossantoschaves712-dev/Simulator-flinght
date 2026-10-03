@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulador Ares — Multimotor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800;900&family=Hanken+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--red:#E5322D;--amb:#FFB400;--grn:#4CD18A;--bg:#0A0D12;--pn:#11161E;--mut:#8FA0B8;--d:'Big Shoulders Display','Arial Narrow',Impact,sans-serif;--b:'Hanken Grotesk','Segoe UI',system-ui,sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:dark}
+*,*::before,*::after{box-sizing:inherit}[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:#E8EDF4;font:500 14px/1.4 var(--b);-webkit-user-select:none;user-select:none;overscroll-behavior:none}
+.app{max-width:1060px;margin:0 auto;padding:6px 8px 24px;display:grid;gap:8px;align-items:start}
+@media(min-width:700px){.app{grid-template-columns:1.15fr 1fr;padding:14px}.top{position:static!important}}
+.pn{background:var(--pn);border-radius:18px;padding:8px;box-shadow:inset 0 0 0 1px #1E2630}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+#warn{min-height:36px;padding:7px 12px;border-radius:10px;font-weight:700;font-size:13px;background:#16202B;color:var(--grn);display:flex;justify-content:space-between;gap:8px;margin-bottom:6px}
+#warn.a{background:#3B2A06;color:var(--amb)}#warn.r{background:#45100F;color:#FF7A75;animation:bl .7s infinite}
+@keyframes bl{50%{opacity:.55}}
+#bn{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 130px);transform:translateX(-50%);width:min(92vw,440px);z-index:15;padding:14px 16px;border-radius:16px;text-align:center;line-height:1.3;pointer-events:none;box-shadow:0 12px 40px rgba(0,0,0,.6);font-weight:700}
+#bn big{display:block;font:900 27px var(--d);text-transform:uppercase;letter-spacing:.03em;margin-bottom:2px}
+#bn.r{background:#8A1815;color:#fff;animation:bl .7s infinite}#bn.g{background:#14633A;color:#fff}
+.hr{display:flex;gap:6px;margin-bottom:6px;align-items:stretch}.hr #warn{margin:0;flex:1;min-height:0}
+#gd{flex:1.35;background:#0C1219;border-radius:10px;padding:6px 9px;font-size:11.5px;line-height:1.4;box-shadow:inset 0 0 0 1px #243040}
+#gd b{display:block;font:800 13px var(--d);color:var(--mut);letter-spacing:.06em;text-transform:uppercase;margin-bottom:1px}
+#gd .a{color:var(--amb);font-weight:700}#gd .g{color:var(--grn)}
+.gs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:min(100%,calc(100dvh - 130px));margin:0 auto}
+.gs canvas{width:100%;aspect-ratio:1;display:block}
+#ai{grid-column:1/3;grid-row:1/3}
+#st{font-size:11.5px;line-height:1.35;color:#C4CEDB;background:#05070A;border-radius:50%;box-shadow:inset 0 0 0 4px #39414F;display:grid;place-content:center;text-align:center;aspect-ratio:1;padding:6px}
+#st b{color:var(--amb)}
+.ctl{display:grid;gap:12px}
+.cr{display:flex;justify-content:space-between;align-items:flex-end;gap:6px}
+.tw{display:grid;justify-items:center;gap:5px;font-size:12px;color:var(--mut);text-align:center}
+.tv{width:70px;height:156px;border-radius:14px;background:linear-gradient(#10141a,#1b222c);position:relative;touch-action:none;overflow:hidden;box-shadow:inset 0 0 0 2px #2E3846}
+.tv::before{content:"";position:absolute;left:50%;top:14px;bottom:14px;width:12px;margin-left:-6px;background:#020305;border-radius:6px;box-shadow:0 0 0 2px #3a4350}
+.tv i{display:none}
+.tv b{position:absolute;left:50%;width:48px;height:34px;margin-left:-24px;border-radius:10px;background:repeating-linear-gradient(0deg,#0b0d11 0 3px,#2c323c 3px 5px);box-shadow:0 6px 12px rgba(0,0,0,.65),inset 0 2px 0 rgba(255,255,255,.2)}
+.tv b::after{content:"";position:absolute;left:50%;top:100%;width:8px;height:220px;margin-left:-4px;background:linear-gradient(90deg,#59616d,#9aa3b0,#59616d)}
+.tw em{font-style:normal;color:#fff;font-weight:700}
+#yk{width:170px;height:170px;touch-action:none;background:radial-gradient(#1D2530,#0F141B);border-radius:50%;box-shadow:inset 0 0 0 2px #2E3846;flex:none;display:block}
+button{font:700 14px var(--b);color:#fff;background:#232C38;border:0;border-radius:12px;padding:12px 8px;cursor:pointer;touch-action:manipulation}
+button:active{background:#323E4E}button.r{background:#6B1B19}button.p{background:var(--red)}button.on{box-shadow:inset 0 0 0 2px var(--grn)}
+.rd{display:flex;gap:8px}.rd button{flex:1;padding:16px}
+.bt{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+details{color:#C4CEDB;font-size:13px}summary{color:var(--mut);cursor:pointer;font-weight:700}
+details ol{margin:6px 0 0;padding-left:20px}
+small{color:var(--mut);display:block;font-size:11.5px}
+#ov{position:fixed;inset:0;background:rgba(5,7,10,.88);display:grid;place-content:center;text-align:center;gap:16px;z-index:9;padding:24px}
+#ov h2{font:900 clamp(40px,10vw,76px)/1 var(--d);text-transform:uppercase;margin:0;color:#FF7A75}
+.ls{position:fixed;inset:0;z-index:20;background:var(--bg);overflow:auto;padding:calc(12px + env(safe-area-inset-top,0px)) 14px calc(8px + env(safe-area-inset-bottom,0px))}
+.li{max-width:620px;margin:0 auto;display:grid;gap:12px}
+.lh{display:flex;justify-content:space-between;align-items:baseline;color:var(--mut);font-size:13px}.lh b{font:800 28px var(--d);text-transform:uppercase;color:#fff;letter-spacing:.03em}
+#lc{width:100%;display:block;margin:0 auto;border-radius:18px;background:#05070A}
+#lc.a1{aspect-ratio:1;max-width:300px}#lc.a2{aspect-ratio:2/1;max-width:520px}#lc.a3{aspect-ratio:16/9;max-width:600px}
+#lx{font-size:15.5px;line-height:1.55;color:#D5DDE8}#lx p{margin:0 0 8px}#lx ul,#lx ol{margin:0 0 8px;padding-left:22px}#lx li{margin-bottom:5px}#lx b{color:var(--amb)}
+.lf{display:flex;gap:8px;position:sticky;bottom:0;background:var(--bg);padding:10px 0 4px}.lf button{flex:1;padding:15px 8px}.lf #lsk{flex:none;background:transparent;color:var(--mut)}
+</style>
+</head>
+<body>
+<main class="app">
+<section class="pn top"><div class="hr"><div id="gd"></div><div id="warn"><span id="wt">Voo normal</span><span id="wk"></span></div></div>
+<div class="gs"><canvas id="ai"></canvas><canvas id="asi"></canvas><canvas id="alt"></canvas><canvas id="hdg"></canvas><canvas id="vsi"></canvas><div id="st"></div></div></section>
+<section class="pn ctl">
+<div class="cr">
+<div class="tw"><div class="tv" id="tvL"><i></i><b></b></div>Motor E<em id="eL"></em></div>
+<div class="tw"><canvas id="yk"></canvas><small>Gire: inclina. Puxe (para baixo): nariz sobe</small></div>
+<div class="tw"><div class="tv" id="tvR"><i></i><b></b></div>Motor D<em id="eR"></em></div></div>
+<div class="rd"><button id="pL">◀ Pedal E</button><button id="pR">Pedal D ▶</button></div>
+<div class="bt"><button class="r" id="xL">Falhar motor E</button><button class="r" id="xR">Falhar motor D</button><button id="fe">Embandeirar</button><button id="gr">Trem de pouso</button><button id="lk" class="on">Manetes ligadas</button><button class="p" id="pg">Pouso guiado</button><button id="lr">Rever aulas</button><button class="p" id="rs">Reiniciar voo</button></div>
+<details><summary>Missão e dicas</summary>Mantenha <b>3.000 ft</b> e rumo <b>090°</b>. Em cerca de 20 s, um motor vai falhar.
+<ol><li>Potência máxima no motor bom</li><li>Mantenha 100 kt (linha azul), acima de 85 kt (linha vermelha)</li><li>Pedal contra a guinada</li><li>Embandeire o motor falho</li></ol>
+<small style="margin-top:8px">Teclado: setas = manche (↑ nariz desce), Z/X = pedais, W/S = potência. Simulador educacional simplificado, não substitui treinamento real. Marca fictícia.</small></details>
+</section></main>
+<div id="ls" class="ls"><div class="li"><div class="lh"><b id="lt"></b><span id="lp"></span></div><canvas id="lc"></canvas><div id="lx"></div>
+<div class="lf"><button id="lb">Voltar</button><button class="p" id="ln">Próximo</button><button id="lsk">Pular</button></div></div></div>
+<div id="bn" hidden></div>
+<div id="ov" hidden><h2 id="ot">Colisão com o solo</h2><div style="color:var(--mut)" id="od"></div><div style="display:flex;gap:10px;justify-content:center"><button class="p" id="ro">Voar de novo</button><button id="ro2">Pouso guiado</button></div></div>
+<script>
+const D=Math.PI/180,$=s=>document.querySelector(s),cl=(v,a,b)=>Math.max(a,Math.min(b,v)),TA=3000,TH=90,S={};
+let kx=0,ky=0,rb=0,rk=0;const pd={x:0,y:0,on:0};
+function reset(){Object.assign(S,{pitch:2.5,roll:0,hdg:90,ias:150,alt:3000,vs:0,yaw:0,rL:.55,rR:.55,fL:0,fR:0,feL:0,feR:0,gear:0,mode:"cruise",rec:0,rt:0,recA:0,okT:0,sx:0,sy:0,pe:0,pn:0,t:0,ok:0,dead:0,auto:0,why:""});th.L=th.R=.55;thUI();$("#ov").hidden=true}
+// ---- desenho ----
+const bz=x=>{x.fillStyle="#05070A";x.beginPath();x.arc(0,0,98,0,7);x.fill();x.lineWidth=4;x.strokeStyle="#39414F";x.stroke()};
+const tx=(x,s,px,py,sz,c,al)=>{x.fillStyle=c||"#fff";x.font=`700 ${sz||12}px Hanken Grotesk,sans-serif`;x.textAlign=al||"center";x.textBaseline="middle";x.fillText(s,px,py)};
+const ln=(x,a,r1,r2,w,c)=>{x.strokeStyle=c||"#fff";x.lineWidth=w;x.beginPath();x.moveTo(Math.cos(a)*r1,Math.sin(a)*r1);x.lineTo(Math.cos(a)*r2,Math.sin(a)*r2);x.stroke()};
+// ---- mundo realista: céu, nuvens e terreno ----
+const F=195,mx=(a,b,t)=>a.map((v,i)=>Math.round(v+(b[i]-v)*t)),rg=c=>`rgb(${c})`;
+function h2(i,j){let n=(i*374761393+j*668265263)|0;n=(n^(n>>>13))*1274126177|0;return((n^(n>>>16))>>>0)/4294967295}
+const FD=[[118,146,82],[132,152,88],[150,140,90],[104,132,74],[160,150,96]],HZ=[205,226,243];
+function world(x){const al=Math.max(S.alt,30),hd=S.hdg*D,sn=Math.sin(hd),cs=Math.cos(hd),pe=S.pe||0,pn=S.pn||0;
+let g=x.createLinearGradient(0,-300,0,0);g.addColorStop(0,rg(mx([63,134,216],[14,36,92],cl(al/12000,0,1))));g.addColorStop(1,rg(HZ));x.fillStyle=g;x.fillRect(-300,-500,600,500);
+g=x.createLinearGradient(0,0,0,200);g.addColorStop(0,"rgb(176,198,196)");g.addColorStop(.4,"rgb(110,138,96)");g.addColorStop(1,"rgb(86,112,70)");x.fillStyle=g;x.fillRect(-300,0,600,500);
+const C=1500,R=11,i0=Math.floor(pe/C),j0=Math.floor(pn/C),cells=[];
+for(let a=-R;a<=R;a++)for(let b=-R;b<=R;b++){const i=i0+a,j=j0+b,z=((i+.5)*C-pe)*sn+((j+.5)*C-pn)*cs;if(z<-C*.6||z>R*C)continue;cells.push([i,j,z])}
+cells.sort((p,q)=>q[2]-p[2]);
+const pr=(E,N)=>{const dE=E-pe,dN=N-pn,z=Math.max(dE*sn+dN*cs,al*.6+20);return[F*(dE*cs-dN*sn)/z,F*al/z]};
+cells.forEach(([i,j,z])=>{const h=h2(i,j),c=h<.1?[60,110,156]:h<.25?[66,104,58]:FD[Math.floor(h*5)%5],f=cl((z-3000)/(R*C-3000),0,1)*.85;
+const p=[pr(i*C,j*C),pr((i+1)*C,j*C),pr((i+1)*C,(j+1)*C),pr(i*C,(j+1)*C)];
+x.fillStyle=x.strokeStyle=rg(mx(c,HZ,f));x.lineWidth=.8;x.beginPath();x.moveTo(p[0][0],p[0][1]);for(let k=1;k<4;k++)x.lineTo(p[k][0],p[k][1]);x.closePath();x.fill();x.stroke();
+if(h>.72){x.strokeStyle=`rgba(205,195,165,${.55*(1-f)})`;x.beginPath();x.moveTo(p[0][0],p[0][1]);x.lineTo(p[1][0],p[1][1]);x.stroke()}});
+{const RW=75,pl=(p,c)=>{x.fillStyle=c;x.beginPath();x.moveTo(p[0][0],p[0][1]);for(let q=1;q<p.length;q++)x.lineTo(p[q][0],p[q][1]);x.closePath();x.fill()};
+for(let k=0;k<20;k++){const a=k*300,z=-pe*sn+(a+150-pn)*cs;if(z<-300||z>R*C)continue;const f=cl((z-3000)/(R*C-3000),0,1)*.85,c=rg(mx([62,66,74],HZ,f));pl([pr(-RW,a),pr(RW,a),pr(RW,a+300),pr(-RW,a+300)],c);x.strokeStyle=c;x.lineWidth=.8;x.stroke()}
+for(let a=60;a<5900;a+=200){const z=-pe*sn+(a-pn)*cs;if(z<-200||z>14000)continue;pl([pr(-2,a),pr(2,a),pr(2,a+100),pr(-2,a+100)],`rgba(255,255,255,${cl(1.1-z/14000,0,.9)})`)}
+for(let b=-5;b<=5;b++){if(!b)continue;const z=-pe*sn+(30-pn)*cs;if(z<-100||z>14000)continue;pl([pr(b*12-4,8),pr(b*12+4,8),pr(b*12+4,70),pr(b*12-4,70)],`rgba(255,255,255,${cl(1.1-z/14000,0,.9)})`)}
+for(let k=1;k<=14;k++){const q=pr(0,-120*k),z=(-120*k-pn)*cs-pe*sn;if(z<50)continue;x.fillStyle="#FFC24A";x.beginPath();x.arc(q[0],q[1],Math.max(.7,F*5/z),0,7);x.fill()}}
+g=x.createLinearGradient(0,-8,0,60);g.addColorStop(0,"rgba(205,226,243,.95)");g.addColorStop(1,"rgba(205,226,243,0)");x.fillStyle=g;x.fillRect(-300,-8,600,70);
+const CC=4000,ci=Math.floor(pe/CC),cj=Math.floor(pn/CC),cl2=[];
+for(let a=-4;a<=4;a++)for(let b=-4;b<=4;b++){const i=ci+a,j=cj+b,h=h2(i+500,j+500);if(h<.5)continue;
+const dE=(i+h2(i,j+9))*CC-pe,dN=(j+h2(i+7,j))*CC-pn,z=dE*sn+dN*cs;if(z<250||z>17000)continue;cl2.push([dE*cs-dN*sn,z,5000+h*700,500+h*800])}
+const up=al>5000;cl2.sort((p,q)=>q[1]-p[1]).forEach(([X,z,ca,Rd])=>{const sx=F*X/z,sy=F*(al-ca)/z,r=F*Rd/z;if(r<1.5)return;
+x.fillStyle=`rgba(${up?255:228},${up?255:233},${up?255:240},${cl(1.2-z/15000,0,.95)})`;
+[[0,0,1],[-.7,.12,.7],[.7,.08,.75],[.25,-.18,.65]].forEach(([dx,dy,sc])=>{x.beginPath();x.ellipse(sx+dx*r,sy+dy*r*.4,r*sc,r*sc*.5,0,0,7);x.fill()})});
+const d=Math.abs(al-5350);if(d<350){x.fillStyle=`rgba(235,240,246,${.75*(1-d/350)})`;x.fillRect(-300,-300,600,600)}}
+function dAI(x){x.save();x.beginPath();x.arc(0,0,94,0,7);x.clip();x.rotate(-S.roll*D);const k=3.4;x.translate(0,S.pitch*k);
+world(x);
+x.strokeStyle="#fff";x.lineWidth=2;x.beginPath();x.moveTo(-300,0);x.lineTo(300,0);
+for(let p=-30;p<=30;p+=5){if(!p)continue;const L=p%10?9:22;x.moveTo(-L,-p*k);x.lineTo(L,-p*k)}x.stroke();x.restore();
+x.lineWidth=4;x.strokeStyle="#39414F";x.beginPath();x.arc(0,0,96,0,7);x.stroke();
+x.save();x.rotate(-S.roll*D);[-60,-45,-30,-20,-10,0,10,20,30,45,60].forEach(a=>ln(x,(a-90)*D,86,a%30?92:97,2));x.restore();
+x.fillStyle="#FFB400";x.beginPath();x.moveTo(0,-85);x.lineTo(-6,-74);x.lineTo(6,-74);x.fill();
+x.strokeStyle="#FFB400";x.lineWidth=5;x.lineCap="round";x.lineJoin="round";x.beginPath();x.moveTo(-60,0);x.lineTo(-26,0);x.lineTo(-16,10);x.moveTo(60,0);x.lineTo(26,0);x.lineTo(16,10);x.stroke();x.fillStyle="#FFB400";x.beginPath();x.arc(0,0,4,0,7);x.fill();
+x.fillStyle="rgba(0,0,0,.55)";x.fillRect(-26,76,52,10);x.fillStyle="#fff";x.beginPath();x.arc(cl(S.yaw*2.2,-20,20),81,4,0,7);x.fill();}
+function dASI(x){bz(x);const A=v=>(135+v/250*270)*D;x.lineWidth=5;x.strokeStyle="#4CD18A";x.beginPath();x.arc(0,0,84,A(85),A(180));x.stroke();x.strokeStyle="#E5322D";x.beginPath();x.arc(0,0,84,A(180),A(250));x.stroke();
+for(let v=40;v<=250;v+=10){ln(x,A(v),78,v%50?72:67,1.5);if(v%50==0)tx(x,v,Math.cos(A(v))*54,Math.sin(A(v))*54,12)}
+ln(x,A(85),70,92,3,"#FF3B35");ln(x,A(100),70,92,3,"#4DA3FF");
+ln(x,A(cl(S.ias,30,255)),78,-8,4,"#fff");tx(x,"KT",0,-26,10,"#8FA0B8");tx(x,Math.round(S.ias),0,30,16)}
+function dALT(x){bz(x);for(let n=0;n<50;n++){const a=(n*7.2-90)*D;ln(x,a,90,n%5?85:80,n%5?1:2)}
+for(let n=0;n<10;n++){const a=(n*36-90)*D;tx(x,n,Math.cos(a)*64,Math.sin(a)*64,15)}
+tx(x,"ALT",0,-26,10,"#8FA0B8");tx(x,Math.round(S.alt/10)*10,0,32,15,"#FFB400");
+ln(x,(S.alt/10000*360-90)*D,-6,46,6,"#FFB400");ln(x,((S.alt%1000)/1000*360-90)*D,-12,82,3)}
+function dHDG(x){bz(x);x.save();x.rotate(-S.hdg*D);
+for(let h=0;h<360;h+=5){x.save();x.rotate(h*D);x.strokeStyle="#fff";x.lineWidth=h%10?1:2;x.beginPath();x.moveTo(0,-90);x.lineTo(0,h%10?-85:-80);x.stroke();if(h%30==0)tx(x,h%90?h/10:"NESO"[h/90],0,-67,14,h%90?"#fff":"#FFB400");x.restore()}
+x.rotate((S.mode=="land"?0:TH)*D);x.fillStyle="#E5322D";x.beginPath();x.moveTo(0,-92);x.lineTo(-7,-101);x.lineTo(7,-101);x.fill();x.restore();
+x.fillStyle="#FFB400";x.beginPath();x.moveTo(0,-86);x.lineTo(-6,-76);x.lineTo(6,-76);x.fill();
+x.strokeStyle="#FFB400";x.lineWidth=3;x.lineCap="round";x.beginPath();x.moveTo(0,-26);x.lineTo(0,22);x.moveTo(-22,0);x.lineTo(22,0);x.moveTo(-8,20);x.lineTo(8,20);x.stroke();
+tx(x,String(Math.round(S.hdg)%360).padStart(3,"0")+"°",0,44,14)}
+function dVSI(x){bz(x);const A=v=>(180+v/2000*150)*D;
+for(let v=-2000;v<=2000;v+=250)ln(x,A(v),90,v%500?85:80,v%500?1:2);
+[-2,-1,0,1,2].forEach(v=>tx(x,Math.abs(v),Math.cos(A(v*1000))*64,Math.sin(A(v*1000))*64,14));
+tx(x,"VS",0,-30,10,"#8FA0B8");tx(x,"x1000",0,28,10,"#8FA0B8");ln(x,A(cl(S.vs,-2000,2000)),-8,78,3.5);tx(x,Math.round(S.vs/10)*10,0,50,13,"#FFB400")}
+const dYK=x=>dYoke(x,S.sx*75,S.sy);
+const G=[["yk",dYK],["ai",dAI],["asi",dASI],["alt",dALT],["hdg",dHDG],["vsi",dVSI]];
+function rs(){const d=Math.min(devicePixelRatio||1,2);G.forEach(g=>{g.c=$("#"+g[0]);g.c.width=g.c.clientWidth*d;g.c.height=g.c.clientHeight*d;g.x=g.c.getContext("2d")})}
+addEventListener("resize",rs);
+// ---- física ----
+function step(dt){const s=S;s.t+=dt;
+[["L"],["R"]].forEach(([k])=>{const f=s["f"+k],tg=f?0:th[k];s["r"+k]+=(tg-s["r"+k])*Math.min(1,dt*(f?2.5:.9))});
+const P=(s.rL+s.rR)/2,wind=(s.fL&&!s.feL)+(s.fR&&!s.feR),fea=(s.fL&&s.feL)+(s.fR&&s.feR);
+let sx=cl(pd.on?pd.x:kx,-1,1),sy=cl(pd.on?pd.y:ky,-1,1),rud=cl(rb+rk,-1,1);
+const ttI=s.vs<-50?s.alt/(-s.vs/60):99,appr=s.gear&&Math.abs(s.pe)<500&&s.pn>-12000&&s.pn<6000;
+if(!s.rec&&((s.ias<66&&s.alt>40)||(appr?(s.alt>40&&s.vs<-1100&&ttI<6):((s.alt<700&&ttI<10)||(s.alt<250&&s.vs<-400))))){s.rec=1;s.rt=0;s.recA=appr?1:0;s.okT=0}
+if(s.okT>0)s.okT-=dt;
+if(s.rec){s.rt+=dt;const tp=s.ias<72?-4:s.ias<95?1:(s.recA?3:8);
+sy=cl((tp-s.pitch)*.2,-1,1);sx=cl(-s.roll*.1,-1,1);rud=cl(s.yaw*.08,-1,1);th.L=Math.min(1,th.L+dt*.7);th.R=Math.min(1,th.R+dt*.7);thUI();
+if(s.rt>2.5&&s.ias>=95&&Math.abs(s.roll)<6&&(s.recA?s.vs>-200:(s.vs>=0&&s.alt>=1000))){s.rec=0;s.okT=6}}
+s.sx=sx;s.sy=sy;
+s.ias=cl(s.ias+((62+P*165-wind*20-fea*5-(s.gear?22:0)-s.ias)*.12-Math.sin((s.pitch-2.5)*D)*40)*dt,30,260);
+const vm=s.ias<85&&(s.fL!=s.fR)?2:1;
+s.yaw+=((s.rR-s.rL)*22*vm-rud*20-s.yaw*.7)*dt;
+s.roll=cl(s.roll+(sx*38-s.yaw*.5-s.roll*.03)*dt,-70,70);
+s.pitch=cl(s.pitch+sy*14*dt,-25,25);
+if(s.ias<68){s.pitch=Math.max(-25,s.pitch-14*dt);s.roll+=Math.sin(s.t*9)*20*dt}
+s.hdg=(((s.hdg+1091*Math.tan(s.roll*D)/s.ias*dt)%360)+360)%360;{const v=s.ias*1.688*dt;s.pe+=Math.sin(s.hdg*D)*v;s.pn+=Math.cos(s.hdg*D)*v}
+s.vs+=(s.ias*101.27*Math.sin((s.pitch-2.5)*D)-s.vs)*Math.min(1,dt*1.5);s.alt+=s.vs/60*dt;
+if(s.t>20&&!s.auto){s.auto=1;if(!s.fL&&!s.fR)Math.random()<.5?s.fL=1:s.fR=1}
+const dh=Math.abs(((s.hdg-TH+540)%360)-180);if(Math.abs(s.alt-TA)<100&&dh<10)s.ok+=dt;
+if(s.alt<=0)touch()}
+function touch(){const s=S,onR=Math.abs(s.pe)<75&&s.pn>0&&s.pn<6000,vf=Math.round(s.vs/10)*10;let ok=0,m;s.alt=0;s.dead=1;
+if(onR){if(!s.gear)m="O trem de pouso estava recolhido.";else if(s.vs<-600)m=`Descida muito forte (${-vf} fpm). O limite é 600.`;else if(s.ias>120)m=`Velocidade muito alta no toque (${Math.round(s.ias)} kt).`;else if(Math.abs(s.roll)>10)m="Asas inclinadas no toque.";else if(s.ias<68)m="Velocidade muito baixa: o avião estolou.";else{ok=1;m=`Toque suave a ${Math.round(s.ias)} kt e ${-vf} fpm.`}}
+else m=s.ias<68?"Perda de sustentação em baixa velocidade.":"Você tocou fora da pista.";
+$("#ot").textContent=ok?"Pouso perfeito":(s.mode=="land"||onR)?"Pouso fracassado":"Colisão com o solo";$("#ot").style.color=ok?"#4CD18A":"#FF7A75";$("#od").textContent=m;$("#ov").hidden=false}
+function setLand(){reset();Object.assign(S,{mode:"land",pe:-350,pn:-24000,hdg:0,alt:1800,ias:130,auto:1,rL:.4,rR:.4});th.L=th.R=.4;thUI()}
+function guide(){const s=S,land=s.mode=="land",d=-s.pn,L=[],thN=Math.max(th.L,th.R),fl=s.fL||s.fR,dH=(a,b)=>((a-b+540)%360)-180;
+const tH=land?((-cl(s.pe/60,-25,25))+360)%360:90,tI=fl?100:land?(d>12000?120:90):150,gs=d>0?(d+500)*.0524:0,tV=land?(s.alt<25?-250:cl(-500+(gs-s.alt)*1.2,-900,300)):cl((3000-s.alt)*.6,-800,800);
+const df=cl(dH(tH,s.hdg)*1.2,-20,20)-s.roll,dv=tV-s.vs;
+L.push(Math.abs(df)<4?["Manche: mantenha",1]:df>0?["Manche: gire à direita ▶",0]:["Manche: gire à esquerda ◀",0]);
+L.push(s.ias<76?["Empurre: velocidade baixa",0]:Math.abs(dv)<120?["Nariz: mantenha",1]:dv>0?["Puxe (arraste p/ baixo)",0]:["Empurre (arraste p/ cima)",0]);
+const pw=land&&s.alt<25?.15:fl&&!(s.fL&&s.fR)?1:cl(Math.round((thN+(tI-s.ias)*.012)/.05)*.05,0,1),pc=Math.round(pw*100);
+L.push(Math.abs(pw-thN)<.045?[`Potência ${pc}%: ok`,1]:[`Potência ${pc}% (agora ${Math.round(thN*100)}%)`,0]);
+if(fl&&!(s.feL||s.feR))L.push(["Embandeire o motor falho",0]);else if(Math.abs(s.yaw)>3)L.push([`Pedal ${s.yaw>0?"direito":"esquerdo"}`,0]);
+if(land&&!s.gear&&d<12000)L.push(["Baixe o trem de pouso",0]);
+if(land&&s.alt<25&&s.alt>0)L.push(["Arredonde: puxe suave",0]);
+return `<b>${land?"Pouso · "+(d>0?(d/6076).toFixed(1)+" NM":"na pista"):"Instrutor"}</b>`+L.map(l=>`<div class="${l[1]?"g":"a"}">${l[0]}</div>`).join("")}
+function ui(){const s=S,w=$("#warn");let t="Voo normal",c="",k="";
+if(s.ias<68){t="ESTOL! Baixe o nariz e aumente a potência";c="r"}
+else if(s.alt<500){t="Altitude muito baixa";c="r"}
+else if(s.fL!=s.fR&&s.ias<85){t="Abaixo da Vmc com motor falho";c="r"}
+else if(s.fL||s.fR){t="Falha do motor "+(s.fL?"esquerdo":"direito")+(s.feL||s.feR?" (embandeirado)":"");c="a"}
+else if(s.ias>235){t="Velocidade excessiva";c="a"}
+w.className=c;$("#wt").textContent=t;$("#wk").textContent=Math.abs(s.alt-TA)<100?"Altitude OK":"";const es=k=>s["f"+k]?(s["fe"+k]?"EMBAND.":"FALHA"):"";$("#eL").textContent=Math.round(s.rL*100)+"% "+es("L");$("#eR").textContent=Math.round(s.rR*100)+"% "+es("R");
+if(!inLesson){$("#gd").innerHTML=s.rec?"<b>Instrutor</b><div class='a'>Recuperando o avião</div><div class='a'>Mãos fora dos controles</div>":guide();
+const bn=$("#bn");bn.hidden=!(s.rec||s.okT>0);bn.className=s.rec?"r":"g";bn.innerHTML=s.rec?"<big>Não toque em nada</big>O instrutor assumiu o controle para evitar a queda.":"<big>Pode assumir o controle</big>Avião estável e seguro. Os comandos são seus de novo."}else $("#bn").hidden=true;$("#st").innerHTML=`${s.mode=="land"?`Pista<br><b>${(Math.max(-s.pn,0)/6076).toFixed(1)} NM</b><br><b>360°</b><br>`:`Alvo<br><b>3000 ft</b><br><b>090°</b><br>No alvo ${Math.round(s.ok)} s<br>`}Trem: ${s.gear?"baixo":"recolhido"}`}
+let lt=performance.now();
+function frame(n){const dt=Math.min(.05,(n-lt)/1000);lt=n;if(!S.dead&&!inLesson)step(dt);ui();if(inLesson)lessonTick(n);
+G.forEach(g=>{const c=g.c,x=g.x,k=Math.min(c.width,c.height)/200;x.setTransform(k,0,0,k,c.width/2,c.height/2);x.clearRect(-400,-400,800,800);g[1](x)});requestAnimationFrame(frame)}
+// ---- controles ----
+const pad=$("#yk");
+function pm(e){const r=pad.getBoundingClientRect();let x=(e.clientX-r.left-r.width/2)/55,y=(e.clientY-r.top-r.height/2)/55,l=Math.hypot(x,y);if(l>1){x/=l;y/=l}pd.x=x;pd.y=y}
+pad.onpointerdown=e=>{pad.setPointerCapture(e.pointerId);pd.on=1;pm(e)};pad.onpointermove=e=>pd.on&&pm(e);
+pad.onpointerup=pad.onpointercancel=()=>{pd.on=0;pd.x=pd.y=0};
+const hold=(id,v)=>{const b=$(id);b.onpointerdown=()=>rb=v;b.onpointerup=b.onpointerleave=b.onpointercancel=()=>rb=0};hold("#pL",-1);hold("#pR",1);
+const th={L:.55,R:.55};
+function thUI(){["L","R"].forEach(k=>{$("#tv"+k+" b").style.bottom=(14+th[k]*94)+"px"})}
+function setTh(k,v){th[k]=v;if($("#lk").classList.contains("on"))th.L=th.R=v;thUI()}
+["L","R"].forEach(k=>{const e=$("#tv"+k),m=ev=>{const r=e.getBoundingClientRect();setTh(k,cl((r.bottom-ev.clientY-31)/94,0,1))};e.onpointerdown=ev=>{e.setPointerCapture(ev.pointerId);e.d=1;m(ev)};e.onpointermove=ev=>e.d&&m(ev);e.onpointerup=e.onpointercancel=()=>e.d=0});
+$("#lk").onclick=()=>$("#lk").classList.toggle("on");
+$("#xL").onclick=()=>S.fL=1;$("#xR").onclick=()=>S.fR=1;$("#gr").onclick=()=>S.gear^=1;
+$("#fe").onclick=()=>{if(S.fL)S.feL=1;if(S.fR)S.feR=1};
+$("#rs").onclick=$("#ro").onclick=reset;$("#pg").onclick=$("#ro2").onclick=setLand;
+const K={ArrowLeft:["x",-1],ArrowRight:["x",1],ArrowUp:["y",-1],ArrowDown:["y",1],z:["r",-1],x:["r",1]};
+addEventListener("keydown",e=>{const m=K[e.key];if(m){e.preventDefault();m[0]=="x"?kx=m[1]:m[0]=="y"?ky=m[1]:rk=m[1]}
+if(e.key=="w"||e.key=="s")setTh("L",cl(th.L+(e.key=="w"?.05:-.05),0,1))});
+addEventListener("keyup",e=>{const m=K[e.key];if(m)m[0]=="x"?kx=0:m[0]=="y"?ky=0:rk=0});
+
+// ---- manche e manetes realistas ----
+function dYoke(x,roll,pull){const k=1+pull*.12;x.save();x.lineCap="round";x.lineJoin="round";
+const gr=x.createLinearGradient(-9,0,9,0);gr.addColorStop(0,"#1c2027");gr.addColorStop(.5,"#59616d");gr.addColorStop(1,"#1c2027");x.fillStyle=gr;x.fillRect(-9,10,18,88);
+x.translate(0,6);x.scale(k,k);x.rotate(roll*D);
+const arm=s=>{x.beginPath();x.moveTo(s*10,2);x.quadraticCurveTo(s*44,4,s*50,-30);x.stroke()};
+x.strokeStyle="#0d0f13";x.lineWidth=15;arm(1);arm(-1);x.strokeStyle="#313845";x.lineWidth=3;arm(1);arm(-1);
+[-1,1].forEach(s=>{x.strokeStyle="#15181d";x.lineWidth=22;x.beginPath();x.moveTo(s*52,-34);x.lineTo(s*54,-58);x.stroke();x.strokeStyle="#E5322D";x.lineWidth=22;x.beginPath();x.moveTo(s*54,-56);x.lineTo(s*54,-57);x.stroke()});
+x.fillStyle="#1a1e25";x.beginPath();x.arc(0,0,17,0,7);x.fill();x.strokeStyle="#4a5260";x.lineWidth=2;x.stroke();tx(x,"ARES",0,0,7,"#FFB400");x.restore()}
+function dLever(x,cx,v,n){const y=70-v*130;x.fillStyle="#020305";x.strokeStyle="#3a4350";x.lineWidth=2;x.beginPath();x.roundRect(cx-7,-62,14,140,7);x.fill();x.stroke();
+x.fillStyle="#9aa3b0";x.fillRect(cx-4,y,8,80-y+12);
+x.fillStyle="#2c323c";x.beginPath();x.roundRect(cx-22,y-16,44,32,9);x.fill();x.strokeStyle="#0b0d11";x.lineWidth=2;for(let i=-12;i<=12;i+=6){x.beginPath();x.moveTo(cx-20,y+i);x.lineTo(cx+20,y+i);x.stroke()}
+tx(x,n,cx,92,13,"#fff");tx(x,"MAX",cx,-76,9,"#8FA0B8");tx(x,"MIN",cx,80,9,"#8FA0B8")}
+function dCtl(x,t){const roll=45*Math.sin(t*.9),pull=Math.sin(t*.6),l=.5+.4*Math.sin(t*.7);
+x.save();x.translate(-100,-2);x.scale(.85,.85);dYoke(x,roll,pull);x.restore();dLever(x,50,l,"E");dLever(x,120,l,"D");
+tx(x,"Manche",-100,-90,12,"#8FA0B8");tx(x,"Manetes",85,-92,12,"#8FA0B8")}
+// ---- animações de voo ----
+const lp=(t,a,b,v0,v1)=>v0+(v1-v0)*cl((t-a)/(b-a),0,1);
+function scene(x,W,H,t,kind){const g=H*.8,u=H/270;let pw,pull,pitch,y,gear=0,cap,pos=t*150,roll=0;
+if(kind=="climb"){pw=lp(t,2,3.5,.55,.9);pull=lp(t,3.5,4.5,0,.6);pitch=lp(t,3.5,4.5,2.5,10);y=H*.58-Math.pow(Math.max(0,t-4.2)/5.8,1.3)*H*.36;
+cap=t<2?"1. Voo nivelado":t<3.5?"2. Manetes para a frente":t<4.5?"3. Puxe o manche com suavidade":"4. Segure o nariz e vigie a velocidade"}
+else if(kind=="desc"){pw=lp(t,2,3.5,.55,.3);pull=lp(t,3.5,4.5,0,-.4);pitch=lp(t,3.5,4.5,2.5,-2.5);y=H*.28+Math.pow(Math.max(0,t-4.2)/5.8,1.3)*H*.3;
+cap=t<2?"1. Voo nivelado":t<3.5?"2. Reduza a potência (manetes para trás)":t<4.5?"3. Empurre o manche de leve":"4. Desça a cerca de 500 pés por minuto"}
+else{const d=Math.min(Math.max(t-7.2,0),2.5);if(t>7.2)pos=1080+150*d-30*d*d;pw=t<1?lp(t,0,1,.55,.35):lp(t,6.2,7,.35,.05);gear=t>1.5;
+pitch=t<1?2.5:t<2.5?lp(t,1,2,2.5,-3):t<6.2?-3:t<6.9?lp(t,6.2,6.9,-3,6):lp(t,7.5,9.5,6,0);
+pull=t<6.2?-.1:t<6.9?lp(t,6.2,6.9,-.1,.6):lp(t,7.5,9,.6,0);
+y=t<1?H*.36:t<6.5?lp(t,1,6.5,H*.36,H*.64):lp(t,6.5,7.2,H*.64,g-27*u);
+cap=t<1?"1. Reduza a potência":t<2.5?"2. Trem de pouso para baixo":t<6.2?"3. Aproximação: desça alinhado com a pista":t<7.2?"4. Arredonde: puxe suave, corte a potência":"5. Toque, mantenha reto e freie"}
+const sk=x.createLinearGradient(0,0,0,g);sk.addColorStop(0,"#2E6FC7");sk.addColorStop(1,"#BFDDF5");x.fillStyle=sk;x.fillRect(0,0,W,g);x.fillStyle="#4F8A4B";x.fillRect(0,g,W,H-g);
+for(let i=0;i<4;i++){const cx=((i*W*.4-pos*.15)%(W*1.4)+W*1.4)%(W*1.4)-W*.2;x.fillStyle="rgba(255,255,255,.75)";x.beginPath();x.ellipse(cx,H*(.1+i*.07),60*u,14*u,0,0,7);x.fill()}
+for(let i=0;i<8;i++){const gx=((i*W/5-pos)%(W*1.6)+W*1.6)%(W*1.6)-40;x.fillStyle="rgba(0,0,0,.12)";x.fillRect(gx,g+10*u+(i%3)*14*u,50*u,3*u)}
+if(kind=="land"){const rx=W*.3+910-pos;x.fillStyle="#3A3F47";x.fillRect(rx,g,1700,H-g);x.fillStyle="#fff";for(let i=0;i<21;i++)x.fillRect(rx+i*80+20,g+(H-g)*.45,40,4*u)}
+x.save();x.translate(W*.3,y);x.rotate(-pitch*D);x.scale(u*1.1,u*1.1);
+if(gear){x.strokeStyle="#666";x.lineWidth=3;x.beginPath();x.moveTo(-6,10);x.lineTo(-6,22);x.moveTo(30,10);x.lineTo(30,22);x.stroke();x.fillStyle="#111";x.beginPath();x.arc(-6,24,6,0,7);x.arc(30,24,5,0,7);x.fill()}
+x.fillStyle="#E5322D";x.beginPath();x.moveTo(-54,-4);x.lineTo(-80,-36);x.lineTo(-62,-36);x.lineTo(-36,-8);x.fill();
+x.fillStyle="#F4F6F8";x.beginPath();x.ellipse(0,0,64,12,0,0,7);x.fill();
+x.fillStyle="#9CB4E8";x.beginPath();x.ellipse(2,6,30,4,0,0,7);x.fill();x.fillStyle="#2C323C";x.beginPath();x.ellipse(10,11,16,6,0,0,7);x.fill();
+x.fillStyle="#2E6FC7";x.beginPath();x.ellipse(36,-3,12,5,0,0,7);x.fill();
+x.fillStyle="rgba(20,20,20,.35)";x.beginPath();x.ellipse(66,0,3,21,0,0,7);x.fill();x.ellipse(26,11,2,12,0,0,7);x.fill();x.restore();
+x.fillStyle="rgba(5,7,10,.75)";x.fillRect(0,0,W,30*u);x.fillStyle="#fff";x.font=`700 ${14*u}px Hanken Grotesk,sans-serif`;x.textAlign="left";x.textBaseline="middle";x.fillText(cap,10*u,15*u);
+x.fillStyle="rgba(5,7,10,.78)";x.beginPath();x.arc(W*.13,H*.84,46*u,0,7);x.fill();
+x.save();x.translate(W*.13,H*.84-6*u);x.scale(.36*u,.36*u);dYoke(x,roll,pull);x.restore();
+x.fillStyle="rgba(5,7,10,.78)";x.fillRect(W-40*u,H*.4,30*u,H*.52);x.fillStyle="#1B222C";x.fillRect(W-34*u,H*.43,18*u,H*.44);x.fillStyle="#FFB400";x.fillRect(W-34*u,H*.87-H*.44*pw,18*u,H*.44*pw);
+x.font=`700 ${9*u}px Hanken Grotesk,sans-serif`;x.fillStyle="#8FA0B8";x.textAlign="center";x.fillText("Pot.",W-25*u,H*.9)}
+// ---- aulas ----
+const LS=[
+{t:"Horizonte artificial",c:1,d:dAI,m:t=>{S.pitch=2+8*Math.sin(t*.8);S.roll=28*Math.sin(t*.5);S.yaw=4*Math.sin(t*.5);S.alt=3500+2200*Math.sin(t*.25);S.hdg=(90+t*8)%360;S.pn=t*260;S.pe=t*40},
+h:`<p>É o instrumento mais importante. Ele mostra como o avião está inclinado e o que você veria lá fora: <b>o céu em cima</b> (com nuvens) e <b>a terra embaixo</b>. Quanto mais alto, menor e mais distante fica o terreno.</p><ul><li>Mais céu na tela: o nariz está para cima.</li><li>Mais terra na tela: o nariz está para baixo.</li><li>Horizonte torto: o avião está inclinado, em curva.</li><li>Seu objetivo: linha reta no meio, com o aviãozinho amarelo sobre ela.</li></ul><p>A bolinha branca embaixo mostra se a curva está coordenada. Use o pedal para centralizá-la.</p>`},
+{t:"Velocímetro",c:1,d:dASI,m:t=>{S.ias=140+85*Math.sin(t*.5)},
+h:`<p>Mostra a velocidade em nós (kt).</p><ul><li><b>Arco verde:</b> faixa normal de operação.</li><li><b>Linha vermelha (85 kt):</b> velocidade mínima de controle com um motor falho.</li><li><b>Linha azul (100 kt):</b> melhor velocidade para subir com um motor só.</li><li><b>Arco vermelho:</b> velocidade excessiva, perigoso.</li></ul><p>Abaixo de 68 kt o avião estola, perde sustentação e o nariz cai.</p>`},
+{t:"Altímetro",c:1,d:dALT,m:t=>{S.alt=3000+1700*Math.sin(t*.35)},
+h:`<p>Mostra a altura em pés.</p><ul><li><b>Ponteiro longo (branco):</b> as centenas de pés. Uma volta completa são 1.000 pés.</li><li><b>Ponteiro curto (amarelo):</b> os milhares de pés.</li><li>O número embaixo dá a leitura exata.</li></ul><p>Na missão, mantenha <b>3.000 ft</b>. Perdendo altura sem querer, o nariz está baixo ou a velocidade caiu.</p>`},
+{t:"Indicador de rumo",c:1,d:dHDG,m:t=>{S.hdg=(t*14)%360},
+h:`<p>O disco gira e o número no topo é o rumo (direção) do avião. N, E, S e O são os pontos cardeais.</p><ul><li>O <b>marcador vermelho</b> é o rumo alvo: <b>090°</b> (leste).</li><li>Para virar, incline o avião; para parar a curva, nivele as asas.</li><li>Curvas suaves, com no máximo 20° de inclinação, são mais seguras.</li></ul>`},
+{t:"Razão de subida",c:1,d:dVSI,m:t=>{S.vs=1300*Math.sin(t*.5)},
+h:`<p>Mostra quantos pés por minuto você sobe ou desce.</p><ul><li>Ponteiro <b>acima do zero:</b> subindo.</li><li>Ponteiro <b>abaixo do zero:</b> descendo.</li><li>No zero: voo nivelado.</li></ul><p>Uma subida ou descida confortável fica perto de 500 pés por minuto. O número é x1000 na escala, então "1" são 1.000 pés por minuto.</p>`},
+{t:"Manche e manetes",c:2,d:dCtl,
+h:`<p><b>Manche:</b> gire para os lados para inclinar. Puxe para você (arraste para baixo) e o nariz sobe. Empurre (arraste para cima) e o nariz desce.</p><p><b>Manetes:</b> uma para cada motor. Para a frente é mais potência, para trás é menos.</p><ul><li>Se um motor falhar, coloque potência máxima no outro.</li><li>Pise no pedal do lado do motor bom, contra a guinada.</li><li>Depois, embandeire o motor falho para reduzir o arrasto.</li></ul>`},
+{t:"Como subir",c:3,k:"climb",
+h:`<ol><li>Ponha o avião nivelado.</li><li>Empurre as <b>manetes</b> para a frente.</li><li>Puxe o <b>manche</b> com suavidade, uns 10° de nariz acima.</li><li>Vigie o velocímetro: não deixe cair abaixo de 100 kt.</li></ol><p>Subir é potência mais nariz para cima. Se a velocidade cair, baixe o nariz.</p>`},
+{t:"Como descer",c:3,k:"desc",
+h:`<ol><li>Reduza a potência: manetes um pouco para trás.</li><li>Empurre o manche de leve para baixar o nariz.</li><li>Mantenha a descida em torno de 500 pés por minuto.</li><li>Antes de chegar à altitude, puxe o manche e recoloque potência para nivelar.</li></ol>`},
+{t:"Como pousar",c:3,k:"land",
+h:`<ol><li>Reduza a velocidade e a potência.</li><li>Baixe o <b>trem de pouso</b>.</li><li>Alinhe com a pista e desça em linha reta e estável.</li><li>Perto do solo, <b>arredonde</b>: puxe o manche suavemente e corte a potência.</li><li>Toque as rodas, segure reto e freie.</li></ol><p>No simulador, toque em <b>Pouso guiado</b>. O avião começa a 4 NM da pista e o instrutor, no canto superior esquerdo, diz o que fazer. Toque suave: menos de 600 pés por minuto, abaixo de 120 kt, trem baixado e asas niveladas.</p>`}];
+let li=0,inLesson=1,L0=performance.now();
+function lsz(){const c=$("#lc"),d=Math.min(devicePixelRatio||1,2);c.width=c.clientWidth*d;c.height=c.clientHeight*d}
+function show(){const l=LS[li];$("#lt").textContent=l.t;$("#lp").textContent=`Aula ${li+1} de ${LS.length}`;$("#lx").innerHTML=l.h;$("#lc").className="a"+l.c;
+$("#ln").textContent=li<LS.length-1?"Próximo":"Começar o simulador";$("#lb").style.visibility=li?"visible":"hidden";L0=performance.now();lsz()}
+function lessonTick(n){const l=LS[li],c=$("#lc"),x=c.getContext("2d"),t=(n-L0)/1000;
+if(l.c==3){x.setTransform(1,0,0,1,0,0);scene(x,c.width,c.height,t%10,l.k)}
+else{const k=Math.min(c.width,c.height)/200;x.setTransform(k,0,0,k,c.width/2,c.height/2);x.fillStyle="#05070A";x.fillRect(-300,-300,600,600);l.m&&l.m(t);l.d(x,t)}}
+function endLesson(){inLesson=0;$("#ls").hidden=true;reset()}
+$("#ln").onclick=()=>{if(li<LS.length-1){li++;show()}else endLesson()};$("#lb").onclick=()=>{if(li){li--;show()}};$("#lsk").onclick=endLesson;
+$("#lr").onclick=()=>{li=0;inLesson=1;$("#ls").hidden=false;show()};
+addEventListener("resize",()=>inLesson&&lsz());
+reset();rs();show();requestAnimationFrame(frame);
+</script>
+</body>
+</html>
